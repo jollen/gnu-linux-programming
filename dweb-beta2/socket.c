@@ -59,7 +59,7 @@ int socket_listen(struct http_operations *ops)
     priv->client_sockfd = client_sockfd;
 
     // HTTP main thread
-    pthread_create(&thread_id1, &attr, http_response, ops);
+    pthread_create(&thread_id1, &attr, http_response, &ops);
 #endif
 
 err:
@@ -152,9 +152,10 @@ void http_close(struct http_operations *ops)
 
     shutdown(client_sockfd, SHUT_RDWR);
     close(client_sockfd);
+#ifdef __USE_FORK__
+    // close the local socket
     close(sockfd);
 
-#ifdef __USE_FORK__
     // terminate the child process
     exit(0);
 #endif

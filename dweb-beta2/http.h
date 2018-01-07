@@ -24,6 +24,6 @@ int http_register(struct http_operations *, int, pthread_t *);
 int http_unregister(struct http_operations *);
 
 // Threads
-void *http_response(void *);
+void *http_response(const void **);
 
 #endif

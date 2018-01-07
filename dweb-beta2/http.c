@@ -43,15 +43,15 @@ void *http_server_thread(void *n)
 	http_main(_n);
 }
 
-void *http_response(void *priv)
+void *http_response(const void **priv)
 {
 	char buf[MAX];
 	int ret;
-	struct http_operations *ops = (struct http_operations *)priv;
+	struct http_operations *ops = *(struct http_operations **)priv;
 
         while (1) {                                                                
            printf("ops->read\n");                                                  
-           ret = ops->read(ops, buf);                                              
+           ret = ops->read(ops, buf);
            printf("client: %s [%d]\n", buf, ret);                                  
            http_parser(buf);                                                       
            if (buf[0] == CR && buf[1] == LF)                                       
