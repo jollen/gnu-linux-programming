@@ -21,4 +21,7 @@ struct http_data {
 int http_register(struct http_operations *, int);
 int http_unregister(struct http_operations *);
 
+// Thread functions
+void *http_response(const void **);
+
 #endif

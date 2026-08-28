@@ -154,10 +154,10 @@ int main(int argc, char *argv[])
     http_ops.priv = (struct socket_data *)malloc(sizeof(struct socket_data));  
     http_register(&http_ops, SOCKET_OPS);
     while (1) {
-	sleep(0);
+	   sleep(0);
 #if __USE_FORK__
-	int status;
-	wait(&status);
+    	int status;
+    	wait(&status);
 #endif
     }
 }

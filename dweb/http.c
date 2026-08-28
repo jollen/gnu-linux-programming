@@ -6,6 +6,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <pthread.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -33,11 +34,37 @@ int http_parser(char *s)
 
 struct http_operations *http_ops[MAX_OPS];
 
+void *http_response(const void **priv)
+{
+	char buf[MAX];
+	int ret;
+
+	struct http_operations *ops = *(struct http_operations **)priv;
+
+    while (1) {                                                                
+       printf("ops->read\n");                                                  
+       ret = ops->read(ops, buf);
+       printf("client: %s [%d]\n", buf, ret);                                  
+       http_parser(buf);                                                       
+       if (buf[0] == CR && buf[1] == LF)                                       
+          break;                                                               
+    }                                                                          
+                                                                               
+    if (http_get) {                                                                                                                                           
+        ops->write(ops, "HTTP/1.1 200 OK\n", 16);                                  
+        ops->write(ops, "Content-Type: text/html\n", 24);                          
+        ops->write(ops, "\n", 1);                                                 
+        ops->write(ops, "<h1>hihi</h1>", 13);                                      
+        ops->write(ops, "\n\n", 2);                                               
+    }                                                                          
+                                                                               
+    printf("ops->close\n");                                                    
+    ops->close(ops);  
+}
+
 void *http_main(int n)
 {
 	struct http_operations *ops = http_data[n].fops;
-	char buf[MAX];
-	int ret;
 
 	/* blocking open */
 	printf("ops->open\n");
@@ -50,22 +77,6 @@ void *http_main(int n)
 	}
 	printf("exit ops->open\n");
 
-        while (1) {
-	   printf("ops->read\n");
-	   ret = ops->read(ops, buf);
-	   printf("client: %s [%d]\n", buf, ret);
-           http_parser(buf);
-	   if (buf[0] == CR && buf[1] == LF)
-	      break;
-	}
-
-	if (http_get) {
-	   ops->write(ops, "hihi", 4);
-	}
-
-	printf("ops->close\n");
-	ops->close(ops);
-
 	return NULL;
 }
 
@@ -75,9 +86,9 @@ int http_register(struct http_operations *ops, int opsno)
 
 	switch (opsno) {
 		case SOCKET_OPS:
-			   http_data[SOCKET_OPS].fops = ops;
-			   //pthread_create(&thread_id1, NULL, &http_main, );
-			   http_main(SOCKET_OPS);
+			http_data[SOCKET_OPS].fops = ops;
+			pthread_create(&thread_id1, NULL, &http_main, SOCKET_OPS);
+			//http_main(SOCKET_OPS);
 			break;
 		case FILE_OPS:
 			http_ops[FILE_OPS] = ops;
